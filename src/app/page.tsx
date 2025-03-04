@@ -1,101 +1,150 @@
-import Image from "next/image";
+'use client';
+
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+import Navbar from '../components/Navbar';
+import MovieCard from '../components/MovieCard';
+import { Movie } from '@/types/movie';
+import { useSearchParams } from 'next/navigation';
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [movies, setMovies] = useState<Movie[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const searchParams = useSearchParams();
+  const sort = searchParams.get('sort') || 'date';
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  // TMDB kategori ID'leri ve renkleri
+  const categories = [
+    { id: 28, name: 'Aksiyon', color: 'from-red-500 to-orange-500' },
+    { id: 10749, name: 'Romantik', color: 'from-pink-500 to-rose-500' },
+    { id: 53, name: 'Gerilim', color: 'from-purple-500 to-indigo-500' },
+    { id: 35, name: 'Komedi', color: 'from-yellow-500 to-amber-500' },
+    { id: 12, name: 'Macera', color: 'from-green-500 to-emerald-500' },
+    { id: 878, name: 'Bilim Kurgu', color: 'from-blue-500 to-cyan-500' },
+    { id: 9648, name: 'Gizem', color: 'from-violet-500 to-purple-500' },
+    { id: 80, name: 'Suç', color: 'from-slate-500 to-gray-500' },
+  ];
+
+  const fetchMovies = async (pageNumber: number) => {
+    try {
+      setLoading(true);
+      const url = new URL('/api/movies', window.location.origin);
+      url.searchParams.set('page', pageNumber.toString());
+      url.searchParams.set('sort', sort);
+      
+      if (selectedCategory) {
+        url.searchParams.set('category', selectedCategory.toString());
+      }
+      
+      const response = await axios.get(url.toString());
+      
+      if (pageNumber === 1) {
+        setMovies(response.data.movies);
+      } else {
+        setMovies(prev => [...prev, ...response.data.movies]);
+      }
+      
+      setHasMore(response.data.hasMore);
+    } catch (error) {
+      console.error('Film verileri çekilemedi:', error);
+      setHasMore(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Kategoriye göre film yükleme optimizasyonu
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setPage(1);
+      fetchMovies(1);
+    }, 300); // Debounce ekle
+
+    return () => clearTimeout(timer);
+  }, [selectedCategory, sort]);
+
+  const loadMore = () => {
+    if (!loading && hasMore) {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      fetchMovies(nextPage);
+    }
+  };
+
+  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+
+  return (
+    <main className="min-h-screen flex">
+      {/* Side Navigation */}
+      <div className={`w-64 glass-effect min-h-screen fixed left-0 top-0 p-6 border-r border-white/10
+        transform transition-transform duration-300 ease-in-out z-40
+        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
+      >
+        <div className="mb-8 mt-20">
+          <h2 className="text-xl font-semibold text-white mb-6 neon-text">Film Türleri</h2>
+          <div className="space-y-3">
+            <button
+              onClick={() => setSelectedCategory(null)}
+              className={`w-full text-left px-4 py-2.5 rounded-full transition-all duration-300 relative group overflow-hidden ${
+                selectedCategory === null
+                  ? 'bg-gradient-to-r from-primary to-blue-500 text-white neon-border'
+                  : 'text-gray-400 hover:text-white glass-effect'
+              }`}
+            >
+              <span className="relative z-10">Tümü</span>
+            </button>
+            {categories.map((category) => (
+              <button
+                key={category.id}
+                onClick={() => setSelectedCategory(category.id)}
+                className={`w-full text-left px-4 py-2.5 rounded-full transition-all duration-300 relative group overflow-hidden ${
+                  selectedCategory === category.id
+                    ? `bg-gradient-to-r ${category.color} text-white` 
+                    : 'text-gray-400 hover:text-white glass-effect'
+                }`}
+              >
+                <span className="relative z-10">{category.name}</span>
+              </button>
+            ))}
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+      </div>
+
+      {/* Main Content */}
+      <div className={`transition-all duration-300 flex-1 ${isSidebarOpen ? 'ml-64' : 'ml-0'}`}>
+        <div className={`fixed top-0 right-0 z-50 transition-all duration-300
+          ${isSidebarOpen ? 'left-64' : 'left-0'}`}
         >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+          <Navbar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+        </div>
+        <div className="container mx-auto px-8 py-8 mt-20">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            {movies.map((movie, index) => (
+              <MovieCard 
+                key={`${movie.id}-${index}`} 
+                movie={movie} 
+              />
+            ))}
+          </div>
+          
+          {/* Daha Fazla Yükle Butonu */}
+          {hasMore && (
+            <div className="mt-8 text-center">
+              <button
+                onClick={loadMore}
+                disabled={loading}
+                className="bg-primary hover:bg-primary/80 text-white py-3 px-6 rounded-lg transition-colors disabled:opacity-50"
+              >
+                {loading ? 'Yükleniyor...' : 'Daha Fazla Film Göster'}
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </main>
   );
 }
