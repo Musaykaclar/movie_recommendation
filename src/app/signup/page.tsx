@@ -35,8 +35,12 @@ export default function SignUp() {
         password: formData.password
       });
       router.push('/login?registered=true');
-    } catch (error: any) {
-      setError(error.response?.data?.error || 'Kayıt işlemi başarısız');
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        setError(error.response?.data?.error || 'Kayıt işlemi başarısız');
+      } else {
+        setError('Kayıt işlemi başarısız');
+      }
     } finally {
       setLoading(false);
     }

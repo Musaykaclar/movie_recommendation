@@ -89,7 +89,9 @@ export default function MovieDetail() {
   if (loading) {
     return (
       <div className="min-h-screen bg-black/95">
-        <Navbar />
+        <Navbar isSidebarOpen={false} toggleSidebar={function (): void {
+          throw new Error('Function not implemented.');
+        } } />
         <div className="flex items-center justify-center h-[calc(100vh-80px)]">
           <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
         </div>
@@ -100,7 +102,9 @@ export default function MovieDetail() {
   if (!movie) {
     return (
       <div className="min-h-screen bg-black/95">
-        <Navbar />
+        <Navbar isSidebarOpen={false} toggleSidebar={function (): void {
+          throw new Error('Function not implemented.');
+        } } />
         <div className="container mx-auto px-8 py-12 text-white text-center">
           Film bulunamadı.
         </div>
@@ -110,7 +114,9 @@ export default function MovieDetail() {
 
   return (
     <div className="min-h-screen bg-black/95">
-      <Navbar />
+      <Navbar isSidebarOpen={false} toggleSidebar={function (): void {
+        throw new Error('Function not implemented.');
+      } } />
       
       {/* Movie Content */}
       <div className="container mx-auto px-8 py-12">

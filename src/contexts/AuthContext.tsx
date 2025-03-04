@@ -33,7 +33,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const response = await axios.get('/api/auth/me');
       setUser(response.data.user);
-    } catch (error) {
+    } catch {
       setUser(null);
     } finally {
       setLoading(false);

@@ -65,7 +65,7 @@ export default function Home() {
     }, 300); // Debounce ekle
 
     return () => clearTimeout(timer);
-  }, [selectedCategory, sort]);
+  }, [selectedCategory, sort,fetchMovies]);
 
   const loadMore = () => {
     if (!loading && hasMore) {

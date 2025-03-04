@@ -1,5 +1,5 @@
 'use client';
-
+import Image from 'next/image';
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import axios from 'axios';
@@ -224,7 +224,7 @@ export default function Navbar({ isSidebarOpen, toggleSidebar }: NavbarProps) {
                   onClick={() => setSearchResults([])}
                 >
                   {movie.poster_path && (
-                    <img
+                    <Image
                       src={`https://image.tmdb.org/t/p/w92${movie.poster_path}`}
                       alt={movie.title}
                       className="w-8 h-12 object-cover rounded"
