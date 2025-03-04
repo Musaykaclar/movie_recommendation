@@ -8,7 +8,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 export async function GET(request: Request) {
   try {
     const token = request.cookies.get('token')?.value;
-    
+
     if (!token) {
       return NextResponse.json(
         { error: 'Yetkilendirme gerekli' },
@@ -35,4 +35,4 @@ export async function GET(request: Request) {
       { status: 401 }
     );
   }
-} 
+}
